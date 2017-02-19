@@ -17,7 +17,7 @@ function add(trackId, outFile) {
     const p = APP.add(trackId, outFile, BEAT_SEQUENCES.map(v => (v - 1)), 1)
         .then(final => {
             console.log(final);
-            INFO.info(trackId)
+            return INFO.info(trackId)
                 .then(info => {
                     const item = info[0]
                     return UPLOAD.upload(`${outFile}.mp4`, { title: item.snippet.title })

@@ -36,24 +36,38 @@ const CLIPS = (() => {
 
   function _recursive() {
 
-    let lang = undefined;
-
-    while (!lang) {
-      lang = LANGS[Math.floor(Math.random() * LANGS.length)]
-    }
-    const chars = new Array(CHARS).fill(0).map((v, i) => (char(lang))).join('')
-
-    console.log(chars);
-
     return new Q((yes, no) => {
-      Youtube.search.list({
-        part: 'snippet',
-        maxResults: 50,
-        type: 'videos',
-        q: `${chars} ${ext()}`
-      }, (err, data) => {
-        yes(_.compact(_.shuffle(data.items).map(obj => (obj.id.videoId))))
-      })
+
+      let lang = undefined;
+
+      while (!lang) {
+        lang = LANGS[Math.floor(Math.random() * LANGS.length)]
+      }
+
+
+      function __r() {
+        const chars = new Array(CHARS).fill(0).map((v, i) => (char(lang))).join('')
+        console.log(chars);
+        Youtube.search.list({
+          part: 'snippet',
+          maxResults: 50,
+          type: 'videos',
+          q: `${chars} ${ext()}`
+        }, (err, data) => {
+          if (err) {
+            console.log(err);
+            no(err)
+          }
+          console.log(data.items.length);
+          if (!data.items.length) {
+            __r()
+          } else {
+            yes(_.compact(_.shuffle(data.items).map(obj => (obj.id.videoId))))
+          }
+        })
+      }
+
+      __r()
     })
   }
 
