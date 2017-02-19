@@ -43,11 +43,6 @@ router.get('/', function(req, res) {
 
 const server = new SERVER(router)
 
-add('wF0DoWPimGg')
-.then(uploadUrl=>{
-    console.log(uploadUrl);
-})
-
 queue.start().then(function(results) {
     console.log(results);
 });
