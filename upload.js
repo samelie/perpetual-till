@@ -16,6 +16,7 @@ const UPLOAD = (() => {
             const child = exec(_cmd)
                 // Listen for stdout data
             child.stderr.on('data', function(data) {
+                console.log(data.toString());
             })
             child.stdout.on('data', function(data) {
                 console.log("Done");
