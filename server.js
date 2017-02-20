@@ -1,4 +1,5 @@
 var express = require('express');
+var cors = require('cors')
 var bodyParser = require('body-parser');
 
 class Server {
@@ -6,6 +7,9 @@ class Server {
 
         var server, routes;
         this.app = express();
+
+
+        this.app.use(cors())
 
         this.app.use(bodyParser.urlencoded({
             extended: true

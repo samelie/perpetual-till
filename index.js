@@ -1,5 +1,4 @@
 require('dotenv').config({ path: './envvars' });
-var BlueBirdQueue = require('bluebird-queue')
 var express = require('express');
 var fs = require('fs');
 var uuid = require('uuid');
@@ -12,11 +11,6 @@ var REDIS = require('./redis');
 var APP = require('./app');
 var UPLOAD = require('./upload');
 const exec = require('child_process').execSync
-
-const queue = new BlueBirdQueue({
-    concurrency: 1 // optional, how many items to process at a time
-});
-
 
 const BEAT_SEQUENCES = [5, 9, 5, 2, 3, 3, 4, 5]
 

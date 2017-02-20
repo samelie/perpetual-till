@@ -22,7 +22,7 @@ const SOCKET = function(express) {
   var users = {};
   var ids = [];
 
-  const IO = io(express, { path: '/perpetual-till-api/perpetual-till-api/socket.io' }).listen(express);
+  const IO = io(express, { path: '/perpetual-till-api/socket.io' }).listen(express);
   IO.on('connection', userConnected);
 
   function userConnected(socket) {
