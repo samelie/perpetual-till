@@ -4,6 +4,7 @@
   "main": "main.js",
   "private": true,
   "dependencies": {
+    "@samelie/chewb-redis": "git://github.com/samradical/chewb-redis.git",
     "@samelie/dash-record": "git://github.com/samradical/dash-record.git",
     "@samelie/node-youtube-dash-sidx": "git://github.com/samradical/node-youtube-dash-sidx.git",
     "bluebird": "^3.4.7",
