@@ -17,11 +17,6 @@ const queue = new BlueBirdQueue({
     concurrency: 1 // optional, how many items to process at a time
 });
 
-if (fs.existsSync(process.env.PROJECT)) {
-    const _cmd = `rm -rf ${process.env.PROJECT}`
-    exec(_cmd)
-}
-fs.mkdirSync(process.env.PROJECT)
 
 const BEAT_SEQUENCES = [5, 9, 5, 2, 3, 3, 4, 5]
 
@@ -61,6 +56,13 @@ function encodingFinished(youtubeId) {
 }
 
 function startEncoding(trackId, outFile) {
+
+    if (fs.existsSync(process.env.PROJECT)) {
+        const _cmd = `rm -rf ${process.env.PROJECT}`
+        exec(_cmd)
+    }
+    fs.mkdirSync(process.env.PROJECT)
+
     return APP.add(trackId, outFile, BEAT_SEQUENCES.map(v => (v - 1)), process.env.CLIPS_PER)
         .then(final => {
             console.log(final);
