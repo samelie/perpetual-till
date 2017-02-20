@@ -46,3 +46,5 @@ build/*
 *.mp3
 
 envvars
+client_secrets.json
+my_credentials.json

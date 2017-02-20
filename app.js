@@ -16,6 +16,8 @@ const spawn = require('child_process').spawnSync
 
 const APP = (() => {
 
+    const PROJECT_P = process.env.PROJECT
+
     const WIDTH = 640
     const HEIGHT = 360
 
@@ -99,8 +101,9 @@ const APP = (() => {
                         const iBuffer = new Buffer(indexBuffer)
                         const refs = chooseMediaRange(references, options)
                         return Q.map(refs, rr => {
+
                             const name = `${options.id}_${rr.mediaRange}`
-                            const tsFile = `${name}.ts`
+                            const tsFile = path.join(process.cwd(),PROJECT_P,`${name}.ts`)
 
                             if (fs.existsSync(tsFile)) {
                                 console.log(`${tsFile} Exists`);
@@ -159,8 +162,8 @@ const APP = (() => {
             const fileIn = `${uuid.v1()}.mp4`
             fs.writeFileSync(fileIn, buffer)
 
-            var outFile = name
-            var tsFile = `${path.parse(outFile).name}.ts`
+            var outFile = path.join(process.cwd(),PROJECT_P,name)
+            var tsFile = path.join(process.cwd(),PROJECT_P,`${path.parse(outFile).name}.ts`)
 
             const returnObj = Object.assign({}, obj, { file: tsFile })
             ffmpeg(fileIn)
@@ -235,7 +238,7 @@ const APP = (() => {
                     console.log(cmd);
                 })
                 .on('end', () => {
-                    console.log('formatting finished!', outFile);
+                    console.log('formatting finished!', videoFile);
                     yes(videoFile)
                 })
                 .on('error', err => {
@@ -308,7 +311,7 @@ const APP = (() => {
                                         //concat the clip segments
                                         return Q.map(_.compact(responses), outs => {
                                             const concat = outs.map(obj => {
-                                                return `file '${path.join(process.cwd(),obj.file)}'`
+                                                return `file '${path.join(process.cwd(),PROJECT_P,obj.file)}'`
                                             })
                                             const { id, duration } = outs[0].options
                                             const concatFile = `${id}.txt`
@@ -319,7 +322,9 @@ const APP = (() => {
                                                 return concatVideoClips(concatFile, outFile, [`-t ${duration}`])
                                                     .then(mp4Path => {
                                                         fs.unlinkSync(concatFile)
-                                                        return toTs(mp4Path, `${path.parse(mp4Path).name}.ts`)
+                                                        const tsFile = path.join(process.cwd(), PROJECT_P, `${path.parse(mp4Path).name}.ts`)
+                                                        console.log(tsFile);
+                                                        return toTs(mp4Path, tsFile)
                                                     })
                                             } else {
                                                 return path.parse(concat[0]).base
@@ -329,7 +334,7 @@ const APP = (() => {
                                     //all the videos
                                     .then(clipFiles => {
                                         const concat = clipFiles.map(p => {
-                                            return `file '${path.join(process.cwd(),p)}`
+                                            return `file '${path.join(process.cwd(),PROJECT_P,p)}`
                                         })
                                         const concatFile = `${uuid.v4()}.txt`
                                         fs.writeFileSync(concatFile, concat.join('\n'))

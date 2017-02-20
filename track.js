@@ -7,7 +7,7 @@ const TRACK = (() => {
   function _parseBeats(file) {
     return new Q((yes, no) => {
       var id = path.parse(file).name
-      var child = spawn('./beats.py', [file, `${id}.csv`])
+      var child = spawn('./beats.py', [file, `${process.env.PROJECT}/${id}.csv`])
       child.stdout.on('data', function(data) {
         console.log("Got data from child: " + data);
       });
@@ -23,7 +23,7 @@ const TRACK = (() => {
 
   function _downloadTrack(id) {
     return new Q((yes, no) => {
-      var child = spawn('youtube-dl', [`https://www.youtube.com/watch?v=${id}`, '-f 140', '-o%(id)s.%(ext)s'])
+      var child = spawn('youtube-dl', [`https://www.youtube.com/watch?v=${id}`, '-f 140', `-o${process.env.PROJECT}/%(id)s.%(ext)s`])
 
       // Listen for stdout data
       child.stdout.on('data', function(data) {
