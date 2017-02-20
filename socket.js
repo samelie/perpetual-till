@@ -21,7 +21,7 @@ const SOCKET = function(express) {
 
   var users = {};
   var ids = [];
-  const IO = io.listen(express);
+  const IO = io.listen(express, { path: '/perpetual-till-api/socket.io' });
   IO.on('connection', userConnected);
 
   function userConnected(socket) {
@@ -60,17 +60,17 @@ const SOCKET = function(express) {
     console.log("Connection: ", socket.id, 'at: ');
   }
 
-  function videoEncoded(id){
+  function videoEncoded(id) {
     IO.sockets.emit('perpetual-till:videoencoded', id)
   }
 
-  function emitAll(str, data){
+  function emitAll(str, data) {
     IO.sockets.emit(`perpetual-till:${str}`, data)
   }
 
   return {
-    videoEncoded:videoEncoded,
-    emitAll:emitAll
+    videoEncoded: videoEncoded,
+    emitAll: emitAll
   }
 };
 

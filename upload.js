@@ -1,5 +1,6 @@
 require('dotenv').config({ path: './envvars' });
 var Q = require('bluebird');
+var fs = require('fs');
 var _ = require('lodash');
 
 
@@ -18,6 +19,7 @@ const UPLOAD = (() => {
             })
             child.stdout.on('data', function(data) {
                 console.log("Done");
+                fs.unlinkSync(path)
                 yes(data)
                 console.log("Got data from child: " + data);
             });

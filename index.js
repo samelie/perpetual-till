@@ -3,6 +3,7 @@ var BlueBirdQueue = require('bluebird-queue')
 var express = require('express');
 var fs = require('fs');
 var uuid = require('uuid');
+var readDir = require('readdir');
 var Q = require('bluebird');
 var SERVER = require('./server');
 const IO = require('./socket')
