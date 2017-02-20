@@ -22,7 +22,7 @@ if (fs.existsSync(process.env.PROJECT)) {
 }
 fs.mkdirSync(process.env.PROJECT)
 
-const BEAT_SEQUENCES = [5, 9, 5, 7, 3, 5, 9, 5]
+const BEAT_SEQUENCES = [5, 9, 5, 2, 3, 3, 4, 5]
 
 const trackQueue = []
 let io;
@@ -60,7 +60,7 @@ function encodingFinished(youtubeId) {
 }
 
 function startEncoding(trackId, outFile) {
-    return APP.add(trackId, outFile, BEAT_SEQUENCES.map(v => (v - 1)), 2)
+    return APP.add(trackId, outFile, BEAT_SEQUENCES.map(v => (v - 1)), process.env.CLIPS_PER)
         .then(final => {
             console.log(final);
             return INFO.info(trackId)
