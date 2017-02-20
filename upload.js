@@ -5,7 +5,7 @@ var _ = require('lodash');
 
 
 const spawn = require('child_process').spawn
-const exec = require('child_process').exec
+const exec = require('child_process').execSync
 
 const UPLOAD = (() => {
     const PATH = process.env.YOUTUBE_UPLOAD || 'youtube-upload'
@@ -13,6 +13,7 @@ const UPLOAD = (() => {
     function upload(path, options) {
         return new Q((yes, no) => {
             const _cmd = `${PATH} --title ${options.title} ${path}`
+            console.log(_cmd);
             const child = exec(_cmd)
                 // Listen for stdout data
             child.stderr.on('data', function(data) {
