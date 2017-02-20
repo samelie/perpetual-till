@@ -7,16 +7,24 @@ const TRACK = (() => {
   function _parseBeats(file) {
     return new Q((yes, no) => {
       var id = path.parse(file).name
-      var child = spawn('./beats.py', [file, `${process.env.PROJECT}/${id}.csv`])
+      const outFile = `${process.env.PROJECT}/${id}.csv`
+      var child = spawn('./beats.py', [file, outFile])
+      child.stderr.on('data', function(data) {
+        no()
+      })
       child.stdout.on('data', function(data) {
         console.log("Got data from child: " + data);
       });
       child.on('exit', function(exitCode) {
         console.log("Child exited with code: " + exitCode);
-        yes({
-          track:file,
-          csv:`${id}.csv`,
-        })
+        if(exitCode === 0){
+          yes({
+            track:file,
+            csv:outFile,
+          })
+        }else{
+          no()
+        }
       });
     });
   }
@@ -32,7 +40,11 @@ const TRACK = (() => {
       // Listen for an exit event:
       child.on('exit', function(exitCode) {
         console.log("Child exited with code: " + exitCode);
-        yes(_parseBeats(`${id}.m4a`))
+        _parseBeats(`${process.env.PROJECT}/${id}.m4a`)
+        .then(data=>(yes(data)))
+        .catch(err=>{
+          no(err)
+        })
       });
     });
   }

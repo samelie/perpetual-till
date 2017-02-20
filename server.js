@@ -17,6 +17,8 @@ class Server {
         console.log(_host, _port);
         var server = this.app.listen(_port)
 
+        this.server = server
+
         this.app.use(router)
 
 

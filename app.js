@@ -115,6 +115,9 @@ const APP = (() => {
 
                             return doRange(r.url, rr.mediaRange, iBuffer)
                                 .then(buffer => {
+
+                                    _handlers.gotBuffer(options.id)
+
                                     return writeMp4({
                                         buffer: buffer,
                                         options: options,
@@ -189,7 +192,9 @@ const APP = (() => {
                         })
                         .on('end', () => {
                             console.log('ts finished!');
+
                             yes(returnObj)
+
                         })
                         .on('error', err => {
                             console.log('format buffer error: ', err);
@@ -348,7 +353,7 @@ const APP = (() => {
 
                                                     }
                                                 })
-                                                return muxMp4(outFile, `${INPUT_TRACK}.m4a`, `${OUTPUT}.mp4`)
+                                                return muxMp4(outFile, `${PROJECT_P}/${INPUT_TRACK}.m4a`, `${OUTPUT}.mp4`)
                                             })
                                     })
 
@@ -356,10 +361,17 @@ const APP = (() => {
                     })
             })
 
+
+    }
+
+
+    function setHandlers(handlers){
+        _handlers = handlers
     }
 
     return {
-        add: add
+        add: add,
+        setHandlers:setHandlers
     }
 
 

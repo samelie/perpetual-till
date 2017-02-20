@@ -5,7 +5,7 @@ var _ = require('lodash');
 
 const CLIPS = (() => {
 
-  const CHARS = 2
+  const CHARS = process.env.CHARS || 3
 
   const EXT = ['flv', 'mov', 'avi', 'mp4', 'wmv']
 
@@ -33,20 +33,22 @@ const CLIPS = (() => {
 
   const char = (lang) => (String.fromCharCode(lang[0] + Math.random() * (lang[1])))
   const ext = () => (EXT[Math.floor(Math.random() * EXT.length)])
-
-  function _recursive() {
-
-    return new Q((yes, no) => {
-
-      let lang = undefined;
+  const lang = () => {
+    let lang = undefined;
 
       while (!lang) {
         lang = LANGS[Math.floor(Math.random() * LANGS.length)]
       }
 
+      return lang
+  }
+
+  function _recursive() {
+
+    return new Q((yes, no) => {
 
       function __r() {
-        const chars = new Array(CHARS).fill(0).map((v, i) => (char(lang))).join('')
+        const chars = new Array(CHARS).fill(0).map((v, i) => (char(lang()))).join('')
         console.log(chars);
         Youtube.search.list({
           part: 'snippet',

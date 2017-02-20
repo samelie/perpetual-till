@@ -15,10 +15,9 @@ const UPLOAD = (() => {
             const child = exec(_cmd)
                 // Listen for stdout data
             child.stderr.on('data', function(data) {
-                console.log(data.toString());
-                no(data.toString())
             })
             child.stdout.on('data', function(data) {
+                console.log("Done");
                 yes(data)
                 console.log("Got data from child: " + data);
             });
@@ -26,8 +25,10 @@ const UPLOAD = (() => {
             child.on('exit', function(exitCode) {
                 if (exitCode !== 0) {
                     //err
+                    console.log("Error");
                     no()
                 } else {
+
                 }
                 console.log("Child exited with code: " + exitCode);
             });
@@ -40,5 +41,6 @@ const UPLOAD = (() => {
 
 
 })()
+
 
 module.exports = UPLOAD
