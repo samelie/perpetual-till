@@ -64,7 +64,7 @@ function startEncoding(trackId, outFile) {
                 .then(info => {
                     const item = info[0]
                     console.log(info);
-                    return UPLOAD.upload(`${outFile}.mp4`, { title: item.snippet.title })
+                    return UPLOAD.upload(final, { title: item.snippet.title })
                         .then(youtubeId => {
                             console.log("processing done", youtubeId);
                             processing = false
