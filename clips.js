@@ -79,6 +79,10 @@ const CLIPS = (() => {
 
     return Q.map(arr, v => {
         return _recursive()
+        .then(r=>{
+          console.log(r);
+          return r
+        })
       })
       .then(results => {
         let videoIds = []
@@ -92,10 +96,9 @@ const CLIPS = (() => {
           incre += 1
           incre = incre % results.length
         }
-
         console.log(videoIds);
         return videoIds
-      })
+      },{concurrency:1})
   }
 
   function get(howMany = 10) {
