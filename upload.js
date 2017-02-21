@@ -12,7 +12,7 @@ const UPLOAD = (() => {
 
     function upload(path, options = {}) {
         return new Q((yes, no) => {
-            const _cmd = `${PATH} --title ${options.title} ${path}`
+            const _cmd = `${PATH} --title "${options.title}" ${path}`
             console.log(_cmd);
             const child = exec(_cmd)
 
