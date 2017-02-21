@@ -39,6 +39,7 @@ const CLIPS = (() => {
       while (!lang) {
         lang = LANGS[Math.floor(Math.random() * LANGS.length)]
       }
+      console.log("Got lang", lang);
 
       return lang
   }
@@ -48,6 +49,7 @@ const CLIPS = (() => {
     return new Q((yes, no) => {
 
       function __r() {
+        console.log("Getting chars");
         const chars = new Array(CHARS).fill(0).map((v, i) => (char(lang()))).join('')
         console.log(chars);
         Youtube.search.list({
