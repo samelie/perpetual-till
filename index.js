@@ -1,5 +1,6 @@
 require('dotenv').config({ path: './envvars' });
 var GoogleUpload = require('@samelie/google-cloudstorage');
+var Redis = require('@samelie/chewb-redis');
 var express = require('express');
 var fs = require('fs');
 var _ = require('lodash');
@@ -15,6 +16,10 @@ var REDIS = require('./redis');
 var APP = require('./app');
 var UPLOAD = require('./upload');
 const exec = require('child_process').execSync
+
+
+const countries = Object.keys(JSON.parse(fs.readFileSync('labs/countries.json')).countries)
+.map(code=>(code.toLowerCase()))
 
 //HARSH
 const BEAT_SEQUENCES = [5, 9, 5, 2, 3, 3, 4, 5]
@@ -63,7 +68,7 @@ function startEncoding(trackId, outFile) {
     }
     fs.mkdirSync(process.env.PROJECT)
 
-    MAPS.directions({ origin: 'paris,france', destination: 'moscow, russia' })
+    return MAPS.directions({ origin: 'paris,france', destination: 'moscow, russia' })
     .then(route => {
         const steps = _.flatten(route.legs.map(leg => leg.steps))
 
