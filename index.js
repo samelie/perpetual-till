@@ -63,54 +63,7 @@ function startEncoding(trackId, outFile) {
     }
     fs.mkdirSync(process.env.PROJECT)
 
-    return APP.add(trackId, outFile, BEAT_SEQUENCES.map(v => (v - 1)), process.env.CLIPS_PER)
-        .then(final => {
-            console.log(final);
-            return INFO.info(trackId)
-                .then(info => {
-                    const item = info[0]
-                    console.log(info);
-                    return UPLOAD.upload(final, { title: item.snippet.title })
-                        .then(youtubeId => {
-                            console.log("processing done", youtubeId);
-                            processing = false
-                            encodingFinished(youtubeId)
-                                //HARSH
-                            exec('rm *.txt')
-                            exec('rm *.mp4')
-                            return youtubeId
-                        })
-
-                })
-        })
-}
-
-APP.setHandlers({
-    gotBuffer: (id) => {
-        io.emitAll('gotbuffer', id)
-    }
-})
-
-const router = express.Router()
-router.get('/churn', function(req, res, next) {
-    const { query } = req
-
-    addTrack(query.id)
-});
-
-router.get('/', function(req, res) {
-    res.status(200).send('nothing to see here...');
-});
-
-const server = new SERVER(router)
-
-io = IO(server.server);
-
-start()
-
-
-const MAX_VIDEOS = 3
-MAPS.directions({ origin: 'paris,france', destination: 'moscow, russia' })
+    MAPS.directions({ origin: 'paris,france', destination: 'moscow, russia' })
     .then(route => {
         const steps = _.flatten(route.legs.map(leg => leg.steps))
 
@@ -138,9 +91,9 @@ MAPS.directions({ origin: 'paris,france', destination: 'moscow, russia' })
                 console.log(videos.length);
                 const ids = videos.map(group=>(group[0]))
                 console.log(ids);
-                return APP.addFromClipIds("hcyY4Oa6Q0M", "directions", BEAT_SEQUENCES.map(v => (v - 1)), ids)
+                return APP.addFromClipIds(trackId, outFile, BEAT_SEQUENCES.map(v => (v - 1)), ids)
                     .then(final => {
-                        return INFO.info("hcyY4Oa6Q0M")
+                        return INFO.info(trackId)
                             .then(info => {
                                 const item = info[0]
                                 console.log(info);
@@ -159,3 +112,29 @@ MAPS.directions({ origin: 'paris,france', destination: 'moscow, russia' })
                     })
             })
     })
+
+}
+
+APP.setHandlers({
+    gotBuffer: (id) => {
+        io.emitAll('gotbuffer', id)
+    }
+})
+
+const router = express.Router()
+router.get('/churn', function(req, res, next) {
+    const { query } = req
+
+    addTrack(query.id)
+});
+
+router.get('/', function(req, res) {
+    res.status(200).send('nothing to see here...');
+});
+
+const server = new SERVER(router)
+
+io = IO(server.server);
+
+start()
+

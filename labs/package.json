@@ -1,0 +1,10 @@
+{
+  "name": "deux-chewb",
+  "version": "1.0.0",
+  "main": "main.js",
+  "private": true,
+  "dependencies": {
+    "@samelie/chewb-redis": "git://github.com/samradical/chewb-redis.git",
+    "event-stream": "^3.3.4"
+  }
+}

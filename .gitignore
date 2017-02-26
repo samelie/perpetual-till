@@ -48,3 +48,4 @@ build/*
 envvars
 client_secrets.json
 my_credentials.json
+worldcitiespop.txt
