@@ -9,6 +9,7 @@
     "@samelie/dash-record": "git://github.com/samradical/dash-record.git",
     "@samelie/node-youtube-dash-sidx": "git://github.com/samradical/node-youtube-dash-sidx.git",
     "@samelie/google-cloudstorage": "git://github.com/samradical/google-cloudstorage.git",
+    "@samelie/chewb-redis": "git://github.com/samradical/chewb-redis.git",
     "bluebird": "^3.4.7",
     "bluebird-queue": "0.0.8",
     "body-parser": "^1.16.1",
