@@ -4,9 +4,11 @@
   "main": "main.js",
   "private": true,
   "dependencies": {
+    "@google/maps": "^0.3.1",
     "@samelie/chewb-redis": "git://github.com/samradical/chewb-redis.git",
     "@samelie/dash-record": "git://github.com/samradical/dash-record.git",
     "@samelie/node-youtube-dash-sidx": "git://github.com/samradical/node-youtube-dash-sidx.git",
+    "@samelie/google-cloudstorage": "git://github.com/samradical/google-cloudstorage.git",
     "bluebird": "^3.4.7",
     "bluebird-queue": "0.0.8",
     "body-parser": "^1.16.1",

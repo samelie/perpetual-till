@@ -66,7 +66,9 @@ const CLIPS = (() => {
           if (!data.items.length) {
             __r()
           } else {
-            yes(_.compact(_.shuffle(data.items).map(obj => (obj.id.videoId))))
+            const r = _.compact(_.shuffle(data.items).map(obj => (obj.id.videoId)))
+            console.log(r);
+            yes(r)
           }
         })
       }
@@ -107,8 +109,13 @@ const CLIPS = (() => {
     return _find(howMany)
   }
 
+  function location(lat,lng){
+
+  }
+
   return {
-    get: get
+    get: get,
+    location:location
   }
 })()
 

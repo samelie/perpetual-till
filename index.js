@@ -1,20 +1,26 @@
 require('dotenv').config({ path: './envvars' });
+var GoogleUpload = require('@samelie/google-cloudstorage');
 var express = require('express');
 var fs = require('fs');
+var _ = require('lodash');
 var uuid = require('uuid');
 var readDir = require('readdir');
 var Q = require('bluebird');
 var SERVER = require('./server');
 const IO = require('./socket')
+var DIRECTION_CLIPS = require('./direction_clips');
 var INFO = require('./info');
+var MAPS = require('./maps');
 var REDIS = require('./redis');
 var APP = require('./app');
 var UPLOAD = require('./upload');
 const exec = require('child_process').execSync
 
+//HARSH
 const BEAT_SEQUENCES = [5, 9, 5, 2, 3, 3, 4, 5]
 
-const trackQueue = ["UkGXUn0Kuuw","kFkQ-d0OeEg","dkul5z9Rs3g","_GA89EfQ0Pg","zu6GO0e9pBo"]
+//const trackQueue = ["UkGXUn0Kuuw", "kFkQ-d0OeEg", "dkul5z9Rs3g", "_GA89EfQ0Pg", "zu6GO0e9pBo"]
+const trackQueue = []
 let io;
 let processing = false
 
@@ -69,6 +75,9 @@ function startEncoding(trackId, outFile) {
                             console.log("processing done", youtubeId);
                             processing = false
                             encodingFinished(youtubeId)
+                                //HARSH
+                            exec('rm *.txt')
+                            exec('rm *.mp4')
                             return youtubeId
                         })
 
@@ -99,8 +108,54 @@ io = IO(server.server);
 
 start()
 
-setTimeout(() => {
 
-        encodingFinished('wF0DoWPimGg')
-    }, 2000)
-    //add('wF0DoWPimGg', 'test')
+const MAX_VIDEOS = 3
+MAPS.directions({ origin: 'paris,france', destination: 'moscow, russia' })
+    .then(route => {
+        const steps = _.flatten(route.legs.map(leg => leg.steps))
+
+        const passes = []
+        let incre
+        let i = 0
+        let points
+        while (steps.length) {
+            incre = Math.floor(steps.length / MAX_VIDEOS)
+            if (!points) {
+                points = []
+            }
+            let index = (i * incre) % steps.length
+            points.push([index, steps[index].start_location])
+            if (points.length > MAX_VIDEOS - 1) {
+                points.forEach(p => (steps.splice(p[0], 1)))
+                passes.push([...points.map(p => p[1])])
+                points = null
+            }
+            i++
+        }
+
+        return DIRECTION_CLIPS.findCoords(_.flatten(passes), MAX_VIDEOS)
+            .then(videos => {
+                console.log(videos.length);
+                const ids = videos.map(group=>(group[0]))
+                console.log(ids);
+                return APP.addFromClipIds("hcyY4Oa6Q0M", "directions", BEAT_SEQUENCES.map(v => (v - 1)), ids)
+                    .then(final => {
+                        return INFO.info("hcyY4Oa6Q0M")
+                            .then(info => {
+                                const item = info[0]
+                                console.log(info);
+                                return UPLOAD.upload(final, { title: item.snippet.title })
+                                    .then(youtubeId => {
+                                        console.log("processing done", youtubeId);
+                                        processing = false
+                                        encodingFinished(youtubeId)
+                                            //HARSH
+                                        exec('rm *.txt')
+                                        exec('rm *.mp4')
+                                        return youtubeId
+                                    })
+
+                            })
+                    })
+            })
+    })

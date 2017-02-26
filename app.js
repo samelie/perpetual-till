@@ -64,7 +64,7 @@ const APP = (() => {
     }
 
     function getSidx(options) {
-        const {id} = options
+        const { id } = options
         const found = _.find(sidxs, id)
         return new Q((yes, no) => {
             if (found) {
@@ -74,9 +74,9 @@ const APP = (() => {
                 yes(Interface.start(options)
                     .then(results => {
                         sidxs.push({
-                            [id]:results[0]
+                            [id]: results[0]
                         })
-                        if(sidxs.length > MAX_SIDX){
+                        if (sidxs.length > MAX_SIDX) {
                             sidxs.shift()
                         }
                         return results[0]
@@ -89,7 +89,7 @@ const APP = (() => {
         return getSidx(options)
             .then(r => {
                 const { sidx } = r
-                if(!sidx){
+                if (!sidx) {
                     console.log(`No SIDX for ${options.id}`);
                     return null
                 }
@@ -103,7 +103,7 @@ const APP = (() => {
                         return Q.map(refs, rr => {
 
                             const name = `${options.id}_${rr.mediaRange}`
-                            const tsFile = path.join(process.cwd(),PROJECT_P,`${name}.ts`)
+                            const tsFile = path.join(process.cwd(), PROJECT_P, `${name}.ts`)
 
                             if (fs.existsSync(tsFile)) {
                                 console.log(`${tsFile} Exists`);
@@ -165,8 +165,8 @@ const APP = (() => {
             const fileIn = `${uuid.v1()}.mp4`
             fs.writeFileSync(fileIn, buffer)
 
-            var outFile = path.join(process.cwd(),PROJECT_P,name)
-            var tsFile = path.join(process.cwd(),PROJECT_P,`${path.parse(outFile).name}.ts`)
+            var outFile = path.join(process.cwd(), PROJECT_P, name)
+            var tsFile = path.join(process.cwd(), PROJECT_P, `${path.parse(outFile).name}.ts`)
 
             const returnObj = Object.assign({}, obj, { file: tsFile })
             ffmpeg(fileIn)
@@ -243,8 +243,8 @@ const APP = (() => {
                     console.log(cmd);
                 })
                 .on('end', () => {
-                    console.log('formatting finished!', videoFile);
-                    yes(videoFile)
+                    console.log('formatting finished!', outFile);
+                    yes(outFile)
                 })
                 .on('error', err => {
                     console.log('format buffer error: ', err);
@@ -313,7 +313,7 @@ const APP = (() => {
                                     }, { concurrency: 1 })
                                     .then(responses => {
                                         let t = 0
-                                        //concat the clip segments
+                                            //concat the clip segments
                                         return Q.map(_.compact(responses), outs => {
                                             const concat = outs.map(obj => {
                                                 return `file '${path.join(process.cwd(),PROJECT_P,obj.file)}'`
@@ -364,18 +364,97 @@ const APP = (() => {
 
     }
 
+    function addFromClipIds(INPUT_TRACK, OUTPUT, BEAT_SEQUENCES, clipIds) {
 
-    function setHandlers(handlers){
+        return TRACK.start(INPUT_TRACK)
+            .then(trackObj => {
+
+                const ids = clipIds.map(id => {
+                    return { id: id, itags: ['134'] }
+                })
+
+                console.log(ids);
+
+                return parseCsv(trackObj.csv)
+                    .then(results => {
+                        const times = _.flatten(results)
+                        const beats = getBeats(times, BEAT_SEQUENCES)
+
+                        const vos = beats.map((o, i) => {
+                            const vid = Object.assign({}, ids[(i % ids.length)])
+                            vid.duration = o
+                            return vid
+                        })
+
+                        console.log(vos);
+
+                        return Q.map(vos, options => {
+                                return record(options)
+                            }, { concurrency: 1 })
+                            .then(responses => {
+                                let t = 0
+                                    //concat the clip segments
+                                return Q.map(_.compact(responses), outs => {
+                                    const concat = outs.map(obj => {
+                                        return `file '${path.join(process.cwd(),PROJECT_P,obj.file)}'`
+                                    })
+                                    const { id, duration } = outs[0].options
+                                    const concatFile = `${id}.txt`
+                                    fs.writeFileSync(concatFile, concat.join('\n'))
+                                    fs.chmodSync(concatFile, '777')
+                                    const outFile = `${id}_${uuid.v4()}.mp4`
+                                    if (concat.length > 1) {
+                                        return concatVideoClips(concatFile, outFile, [`-t ${duration}`])
+                                            .then(mp4Path => {
+                                                fs.unlinkSync(concatFile)
+                                                const tsFile = path.join(process.cwd(), PROJECT_P, `${path.parse(mp4Path).name}.ts`)
+                                                console.log(tsFile);
+                                                return toTs(mp4Path, tsFile)
+                                            })
+                                    } else {
+                                        return path.parse(concat[0]).base
+                                    }
+                                })
+                            })
+                            //all the videos
+                            .then(clipFiles => {
+                                const concat = clipFiles.map(p => {
+                                    return `file '${path.join(process.cwd(),PROJECT_P,p)}`
+                                })
+                                const concatFile = `${uuid.v4()}.txt`
+                                fs.writeFileSync(concatFile, concat.join('\n'))
+                                return concatVideoClips(concatFile, `${uuid.v4()}.mp4`, ['-c:v copy', '-bsf:a aac_adtstoasc'])
+                                    .then((outFile) => {
+                                        fs.unlinkSync(concatFile)
+                                        clipFiles.forEach(f => {
+                                            try {
+                                                fs.unlinkSync(f)
+                                            } catch (e) {
+
+                                            }
+                                        })
+                                        return muxMp4(outFile, `${PROJECT_P}/${INPUT_TRACK}.m4a`, `${OUTPUT}.mp4`)
+                                    })
+                            })
+
+                    })
+            })
+
+
+    }
+
+
+    function setHandlers(handlers) {
         _handlers = handlers
     }
 
     return {
         add: add,
-        setHandlers:setHandlers
+        addFromClipIds: addFromClipIds,
+        setHandlers: setHandlers
     }
 
 
 })()
 
 module.exports = APP
-
