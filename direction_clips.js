@@ -22,11 +22,15 @@ const CLIPS = (() => {
         if (err) {
           yes(null)
         }
-        if (!data.items.length) {
+        if(!data){
           yes(null)
-        } else {
-          const r = _.compact(_.shuffle(data.items).map(obj => (obj.id.videoId)))
-          yes(r)
+        }else{
+          if (!data.items.length) {
+            yes(null)
+          } else {
+            const r = _.compact(_.shuffle(data.items).map(obj => (obj.id.videoId)))
+            yes(r)
+          }
         }
       })
     })
@@ -59,6 +63,7 @@ const CLIPS = (() => {
   }
 
   function findCoords(coords, maxVideos) {
+    console.log(coords);
     return new Q((yes, no) => {
 
       let found = 0

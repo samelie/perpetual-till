@@ -19,10 +19,10 @@ const exec = require('child_process').execSync
 
 
 const countries = Object.keys(JSON.parse(fs.readFileSync('labs/countries.json')).countries)
-.map(code=>(code.toLowerCase()))
+    .map(code => (code.toLowerCase()))
 
 //HARSH
-const BEAT_SEQUENCES = [5, 9, 5, 2, 3, 3, 4, 5]
+const BEAT_SEQUENCES = [4, 6, 2, 2, 2, 2, 4, 4, 1, 1, 2, 2, 1, 1, 2, 2, 1, 1]
 
 //const trackQueue = ["UkGXUn0Kuuw", "kFkQ-d0OeEg", "dkul5z9Rs3g", "_GA89EfQ0Pg", "zu6GO0e9pBo"]
 const trackQueue = []
@@ -68,55 +68,69 @@ function startEncoding(trackId, outFile) {
     }
     fs.mkdirSync(process.env.PROJECT)
 
-    return MAPS.directions({ origin: 'paris,france', destination: 'moscow, russia' })
-    .then(route => {
-        const steps = _.flatten(route.legs.map(leg => leg.steps))
+    const r = Math.floor(Math.random() * countries.length)
+    const country = countries[r]
 
-        const passes = []
-        let incre
-        let i = 0
-        let points
-        while (steps.length) {
-            incre = Math.floor(steps.length / MAX_VIDEOS)
-            if (!points) {
-                points = []
-            }
-            let index = (i * incre) % steps.length
-            points.push([index, steps[index].start_location])
-            if (points.length > MAX_VIDEOS - 1) {
-                points.forEach(p => (steps.splice(p[0], 1)))
-                passes.push([...points.map(p => p[1])])
-                points = null
-            }
-            i++
-        }
+    /*
+    CAN THROW ERROS HERE
+    */
+    return REDIS.lrange(`perpetual-till:geocode:${country}`, 0, -1)
+        .then(coords => {
+            let r = Math.floor(Math.random() * coords.length)
+            let origin = coords.splice(r, 1)[0]
+            r = Math.floor(Math.random() * coords.length)
+            let destination = coords.splice(r, 1)[0]
+            console.log(origin, destination);
+            return MAPS.directions({ origin: origin, destination: destination })
+                .then(route => {
+                    const steps = _.flatten(route.legs.map(leg => leg.steps))
 
-        return DIRECTION_CLIPS.findCoords(_.flatten(passes), MAX_VIDEOS)
-            .then(videos => {
-                console.log(videos.length);
-                const ids = videos.map(group=>(group[0]))
-                console.log(ids);
-                return APP.addFromClipIds(trackId, outFile, BEAT_SEQUENCES.map(v => (v - 1)), ids)
-                    .then(final => {
-                        return INFO.info(trackId)
-                            .then(info => {
-                                const item = info[0]
-                                console.log(info);
-                                return UPLOAD.upload(final, { title: item.snippet.title })
-                                    .then(youtubeId => {
-                                        console.log("processing done", youtubeId);
-                                        processing = false
-                                        encodingFinished(youtubeId)
-                                            //HARSH
-                                        exec('rm *.txt')
-                                        exec('rm *.mp4')
-                                        return youtubeId
-                                    })
+                    const passes = []
+                    let incre
+                    let i = 0
+                    let points
+                    while (steps.length) {
+                        incre = Math.floor(steps.length / process.env.CLIPS_PER)
+                        if (!points) {
+                            points = []
+                        }
+                        let index = (i * incre) % steps.length
+                        points.push([index, steps[index].start_location])
+                        if (points.length > process.env.CLIPS_PER - 1) {
+                            points.forEach(p => (steps.splice(p[0], 1)))
+                            passes.push([...points.map(p => p[1])])
+                            points = null
+                        }
+                        i++
+                    }
 
-                            })
-                    })
-            })
-    })
+                    return DIRECTION_CLIPS.findCoords(_.flatten(passes), process.env.CLIPS_PER)
+                        .then(videos => {
+                            console.log(videos.length);
+                            const ids = videos.map(group => (group[0]))
+                            console.log(ids);
+                            return APP.addFromClipIds(trackId, outFile, BEAT_SEQUENCES, ids)
+                                .then(final => {
+                                    return INFO.info(trackId)
+                                        .then(info => {
+                                            const item = info[0]
+                                            console.log(info);
+                                            return UPLOAD.upload(final, { title: item.snippet.title })
+                                                .then(youtubeId => {
+                                                    console.log("processing done", youtubeId);
+                                                    processing = false
+                                                    encodingFinished(youtubeId)
+                                                        //HARSH
+                                                    exec('rm *.txt')
+                                                    exec('rm *.mp4')
+                                                    return youtubeId
+                                                })
+
+                                        })
+                                })
+                        })
+                })
+        })
 
 }
 
@@ -142,4 +156,3 @@ const server = new SERVER(router)
 io = IO(server.server);
 
 start()
-
