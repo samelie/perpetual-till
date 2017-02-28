@@ -112,7 +112,6 @@ function startEncoding(trackId, outFile) {
                                             processing = false
                                             encodingFinished(youtubeId)
                                                 //HARSH
-                                            exec('rm *.txt')
                                             exec('rm *.mp4')
                                             return youtubeId
                                         })
@@ -147,4 +146,4 @@ io = IO(server.server);
 
 start()
 
-//startEncoding("-7zm8v9reDo", "t")
+startEncoding("-7zm8v9reDo", "t")

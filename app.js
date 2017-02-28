@@ -122,7 +122,7 @@ const APP = (() => {
                                         buffer: buffer,
                                         options: options,
                                         encodeOptions: {
-                                            duration: options.duration,
+                                            duration: rr.durationSec, //options.duration,
                                             name: `${name}.mp4`,
                                         }
                                     })
@@ -215,7 +215,7 @@ const APP = (() => {
         return new Q((yes, no) => {
             console.log(`Concating clips ${filePath}`);
             ffmpeg(filePath)
-                .inputOptions(['-f concat', '-safe 0'])
+                .inputOptions(['-f concat'])
                 .outputOptions([...['-an'], ...options])
                 .output(outFile)
                 .on('start', (cmd) => {
@@ -276,8 +276,8 @@ const APP = (() => {
             }
             v++
             previousI = i
-            i+=jump
-            if(i > l-1){
+            i += jump
+            if (i > l - 1) {
                 previousI = -1
                 i = 0
             }
@@ -411,20 +411,25 @@ const APP = (() => {
                                         let t = 0
                                             //concat the clip segments
                                         return Q.map(_.compact(responses), outs => {
+                                            //concat wants the file relative to the .txt
                                             const concat = outs.map(obj => {
-                                                return `file '${path.join(process.cwd(),PROJECT_P,obj.file)}'`
+                                                return `file '${path.parse(obj.file).base}'`
                                             })
                                             const { id, duration } = outs[0].options
-                                            const concatFile = `${id}.txt`
+                                            //save the concat
+                                            const concatFile = path.join(process.cwd(), PROJECT_P, `${uuid.v4()}.txt`)
                                             fs.writeFileSync(concatFile, concat.join('\n'))
                                             fs.chmodSync(concatFile, '777')
-                                            const outFile = `${id}_${uuid.v4()}.mp4`
-                                            if (concat.length > 1) {
+                                            //the output
+                                            const outFile = path.join(process.cwd(), PROJECT_P, `${uuid.v4()}.mp4`)
+                                            if (concat.length > 0) {
                                                 return concatVideoClips(concatFile, outFile, [`-t ${duration}`])
+                                                    //mp4Path = outFile
                                                     .then(mp4Path => {
                                                         fs.unlinkSync(concatFile)
                                                         const tsFile = path.join(process.cwd(), PROJECT_P, `${path.parse(mp4Path).name}.ts`)
                                                         console.log(tsFile);
+                                                        //convert to ts
                                                         return toTs(mp4Path, tsFile)
                                                     })
                                             } else {
@@ -434,12 +439,12 @@ const APP = (() => {
                                     })
                                     //all the videos
                                     .then(clipFiles => {
-                                        const concat = clipFiles.map(p => {
-                                            return `file '${path.join(process.cwd(),PROJECT_P,p)}`
+                                        const concat =  clipFiles.map(p => {
+                                            return `file '${path.parse(p).base}`
                                         })
-                                        const concatFile = `${uuid.v4()}.txt`
+                                        const concatFile = `${PROJECT_P}/${uuid.v4()}.txt`
                                         fs.writeFileSync(concatFile, concat.join('\n'))
-                                        return concatVideoClips(concatFile, `${uuid.v4()}.mp4`, ['-c:v copy', '-bsf:a aac_adtstoasc'])
+                                        return concatVideoClips(concatFile, `${PROJECT_P}${uuid.v4()}.mp4`, ['-c:v copy', '-bsf:a aac_adtstoasc'])
                                             .then((outFile) => {
                                                 fs.unlinkSync(concatFile)
                                                 clipFiles.forEach(f => {
