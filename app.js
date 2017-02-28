@@ -1,5 +1,6 @@
 var Q = require('bluebird');
 var _ = require('lodash');
+var colors = require('colors');
 var fs = require('fs');
 var path = require('path');
 var TRACK = require('./track');
@@ -294,7 +295,7 @@ const APP = (() => {
 
     function add(INPUT_TRACK, OUTPUT, BEAT_SEQUENCES, maxClips = 10) {
 
-        return TRACK.start(INPUT_TRACK)
+       /* return TRACK.start(INPUT_TRACK)
             .then(trackObj => {
                 return CLIPS.get(maxClips)
                     .then(clipsObj => {
@@ -342,7 +343,6 @@ const APP = (() => {
                                                             .then(mp4Path => {
                                                                 fs.unlinkSync(concatFile)
                                                                 const tsFile = path.join(process.cwd(), PROJECT_P, `${path.parse(mp4Path).name}.ts`)
-                                                                console.log(tsFile);
                                                                 return toTs(mp4Path, tsFile)
                                                             })
                                                     } else {
@@ -373,9 +373,7 @@ const APP = (() => {
                                     })
                             })
                     })
-            })
-
-
+            })*/
     }
 
     function addFromClipIds(INPUT_TRACK, OUTPUT, BEAT_SEQUENCES, clipIds) {
@@ -408,7 +406,7 @@ const APP = (() => {
                                         return record(options)
                                     }, { concurrency: 1 })
                                     .then(responses => {
-                                        let t = 0
+                                        let _count = 0
                                             //concat the clip segments
                                         return Q.map(_.compact(responses), outs => {
                                             //concat wants the file relative to the .txt
@@ -428,15 +426,20 @@ const APP = (() => {
                                                     .then(mp4Path => {
                                                         fs.unlinkSync(concatFile)
                                                         const tsFile = path.join(process.cwd(), PROJECT_P, `${path.parse(mp4Path).name}.ts`)
-                                                        console.log(tsFile);
                                                         //convert to ts
                                                         return toTs(mp4Path, tsFile)
+                                                        .then(tsFile=>{
+                                                            _count++
+                                                            console.log(colors.green(`Concated ${_count}/${responses.length}`));
+                                                            return tsFile
+                                                        })
                                                     })
                                             } else {
                                                 return path.parse(concat[0]).base
                                             }
                                         })
                                         .catch(err=>{
+                                            console.log(colors.red(`Error on clip concat handled`));
                                             return null
                                         })
                                     })
@@ -459,6 +462,9 @@ const APP = (() => {
                                                 })
                                                 return muxMp4(outFile, `${PROJECT_P}/${INPUT_TRACK}.m4a`, `${OUTPUT}.mp4`)
                                             })
+                                    })
+                                    .catch(err=>{
+                                        console.log(colors.red("Big err"));
                                     })
 
                             })
