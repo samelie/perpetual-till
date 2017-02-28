@@ -122,7 +122,7 @@ const APP = (() => {
                                         buffer: buffer,
                                         options: options,
                                         encodeOptions: {
-                                            duration: rr.durationSec,
+                                            duration: options.duration,
                                             name: `${name}.mp4`,
                                         }
                                     })
