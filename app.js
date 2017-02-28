@@ -436,15 +436,18 @@ const APP = (() => {
                                                 return path.parse(concat[0]).base
                                             }
                                         })
+                                        .catch(err=>{
+                                            return null
+                                        })
                                     })
                                     //all the videos
                                     .then(clipFiles => {
-                                        const concat =  clipFiles.map(p => {
+                                        const concat =  _.compact(clipFiles).map(p => {
                                             return `file '${path.parse(p).base}`
                                         })
                                         const concatFile = `${PROJECT_P}/${uuid.v4()}.txt`
                                         fs.writeFileSync(concatFile, concat.join('\n'))
-                                        return concatVideoClips(concatFile, `${PROJECT_P}${uuid.v4()}.mp4`, ['-c:v copy', '-bsf:a aac_adtstoasc'])
+                                        return concatVideoClips(concatFile, `${PROJECT_P}${uuid.v4()}_final.mp4`, ['-c:v copy', '-bsf:a aac_adtstoasc'])
                                             .then((outFile) => {
                                                 fs.unlinkSync(concatFile)
                                                 clipFiles.forEach(f => {
