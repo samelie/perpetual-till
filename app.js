@@ -295,85 +295,85 @@ const APP = (() => {
 
     function add(INPUT_TRACK, OUTPUT, BEAT_SEQUENCES, maxClips = 10) {
 
-       /* return TRACK.start(INPUT_TRACK)
-            .then(trackObj => {
-                return CLIPS.get(maxClips)
-                    .then(clipsObj => {
+        /* return TRACK.start(INPUT_TRACK)
+             .then(trackObj => {
+                 return CLIPS.get(maxClips)
+                     .then(clipsObj => {
 
-                        const ids = clipsObj.map(id => {
-                            return { id: id, itags: ['134'] }
-                        })
+                         const ids = clipsObj.map(id => {
+                             return { id: id, itags: ['134'] }
+                         })
 
-                        console.log(ids);
+                         console.log(ids);
 
-                        return parseCsv(trackObj.csv)
-                            .then(results => {
-                                const times = _.flatten(results)
+                         return parseCsv(trackObj.csv)
+                             .then(results => {
+                                 const times = _.flatten(results)
 
-                                return Q.promisify(ffmpeg.ffprobe)(`${PROJECT_P}/${INPUT_TRACK}.m4a`)
-                                    .then(metadata => {
-                                        console.dir(metadata);
-                                        return
-                                        const beats = getBeats(times, BEAT_SEQUENCES)
+                                 return Q.promisify(ffmpeg.ffprobe)(`${PROJECT_P}/${INPUT_TRACK}.m4a`)
+                                     .then(metadata => {
+                                         console.dir(metadata);
+                                         return
+                                         const beats = getBeats(times, BEAT_SEQUENCES)
 
-                                        const vos = beats.map((o, i) => {
-                                            const vid = Object.assign({}, ids[(i % ids.length)])
-                                            vid.duration = o
-                                            return vid
-                                        })
+                                         const vos = beats.map((o, i) => {
+                                             const vid = Object.assign({}, ids[(i % ids.length)])
+                                             vid.duration = o
+                                             return vid
+                                         })
 
 
-                                        return Q.map(vos, options => {
-                                                return record(options)
-                                            }, { concurrency: 1 })
-                                            .then(responses => {
-                                                let t = 0
-                                                    //concat the clip segments
-                                                return Q.map(_.compact(responses), outs => {
-                                                    const concat = outs.map(obj => {
-                                                        return `file '${path.join(process.cwd(),PROJECT_P,obj.file)}'`
-                                                    })
-                                                    const { id, duration } = outs[0].options
-                                                    const concatFile = `${id}.txt`
-                                                    fs.writeFileSync(concatFile, concat.join('\n'))
-                                                    fs.chmodSync(concatFile, '777')
-                                                    const outFile = `${id}_${uuid.v4()}.mp4`
-                                                    if (concat.length > 1) {
-                                                        return concatVideoClips(concatFile, outFile, [`-t ${duration}`])
-                                                            .then(mp4Path => {
-                                                                fs.unlinkSync(concatFile)
-                                                                const tsFile = path.join(process.cwd(), PROJECT_P, `${path.parse(mp4Path).name}.ts`)
-                                                                return toTs(mp4Path, tsFile)
-                                                            })
-                                                    } else {
-                                                        return path.parse(concat[0]).base
-                                                    }
-                                                })
-                                            })
-                                            //all the videos
-                                            .then(clipFiles => {
-                                                const concat = clipFiles.map(p => {
-                                                    return `file '${path.join(process.cwd(),PROJECT_P,p)}`
-                                                })
-                                                const concatFile = `${uuid.v4()}.txt`
-                                                fs.writeFileSync(concatFile, concat.join('\n'))
-                                                return concatVideoClips(concatFile, `${uuid.v4()}.mp4`, ['-c:v copy', '-bsf:a aac_adtstoasc'])
-                                                    .then((outFile) => {
-                                                        fs.unlinkSync(concatFile)
-                                                        clipFiles.forEach(f => {
-                                                            try {
-                                                                fs.unlinkSync(f)
-                                                            } catch (e) {
+                                         return Q.map(vos, options => {
+                                                 return record(options)
+                                             }, { concurrency: 1 })
+                                             .then(responses => {
+                                                 let t = 0
+                                                     //concat the clip segments
+                                                 return Q.map(_.compact(responses), outs => {
+                                                     const concat = outs.map(obj => {
+                                                         return `file '${path.join(process.cwd(),PROJECT_P,obj.file)}'`
+                                                     })
+                                                     const { id, duration } = outs[0].options
+                                                     const concatFile = `${id}.txt`
+                                                     fs.writeFileSync(concatFile, concat.join('\n'))
+                                                     fs.chmodSync(concatFile, '777')
+                                                     const outFile = `${id}_${uuid.v4()}.mp4`
+                                                     if (concat.length > 1) {
+                                                         return concatVideoClips(concatFile, outFile, [`-t ${duration}`])
+                                                             .then(mp4Path => {
+                                                                 fs.unlinkSync(concatFile)
+                                                                 const tsFile = path.join(process.cwd(), PROJECT_P, `${path.parse(mp4Path).name}.ts`)
+                                                                 return toTs(mp4Path, tsFile)
+                                                             })
+                                                     } else {
+                                                         return path.parse(concat[0]).base
+                                                     }
+                                                 })
+                                             })
+                                             //all the videos
+                                             .then(clipFiles => {
+                                                 const concat = clipFiles.map(p => {
+                                                     return `file '${path.join(process.cwd(),PROJECT_P,p)}`
+                                                 })
+                                                 const concatFile = `${uuid.v4()}.txt`
+                                                 fs.writeFileSync(concatFile, concat.join('\n'))
+                                                 return concatVideoClips(concatFile, `${uuid.v4()}.mp4`, ['-c:v copy', '-bsf:a aac_adtstoasc'])
+                                                     .then((outFile) => {
+                                                         fs.unlinkSync(concatFile)
+                                                         clipFiles.forEach(f => {
+                                                             try {
+                                                                 fs.unlinkSync(f)
+                                                             } catch (e) {
 
-                                                            }
-                                                        })
-                                                        return muxMp4(outFile, `${PROJECT_P}/${INPUT_TRACK}.m4a`, `${OUTPUT}.mp4`)
-                                                    })
-                                            })
-                                    })
-                            })
-                    })
-            })*/
+                                                             }
+                                                         })
+                                                         return muxMp4(outFile, `${PROJECT_P}/${INPUT_TRACK}.m4a`, `${OUTPUT}.mp4`)
+                                                     })
+                                             })
+                                     })
+                             })
+                     })
+             })*/
     }
 
     function addFromClipIds(INPUT_TRACK, OUTPUT, BEAT_SEQUENCES, clipIds) {
@@ -408,44 +408,49 @@ const APP = (() => {
                                     .then(responses => {
                                         let _count = 0
                                             //concat the clip segments
-                                        return Q.map(_.compact(responses), outs => {
-                                            //concat wants the file relative to the .txt
-                                            const concat = outs.map(obj => {
-                                                return `file '${path.parse(obj.file).base}'`
-                                            })
-                                            const { id, duration } = outs[0].options
-                                            //save the concat
-                                            const concatFile = path.join(process.cwd(), PROJECT_P, `${uuid.v4()}.txt`)
-                                            fs.writeFileSync(concatFile, concat.join('\n'))
-                                            fs.chmodSync(concatFile, '777')
-                                            //the output
-                                            const outFile = path.join(process.cwd(), PROJECT_P, `${uuid.v4()}.mp4`)
-                                            if (concat.length > 0) {
-                                                return concatVideoClips(concatFile, outFile, [`-t ${duration}`])
-                                                    //mp4Path = outFile
-                                                    .then(mp4Path => {
-                                                        fs.unlinkSync(concatFile)
-                                                        const tsFile = path.join(process.cwd(), PROJECT_P, `${path.parse(mp4Path).name}.ts`)
-                                                        //convert to ts
-                                                        return toTs(mp4Path, tsFile)
-                                                        .then(tsFile=>{
-                                                            _count++
-                                                            console.log(colors.green(`Concated ${_count}/${responses.length}`));
-                                                            return tsFile
+                                        responses = _.compact(responses)
+                                        return Q.map(responses, outs => {
+                                                //concat wants the file relative to the .txt
+                                                const concat = outs.map(obj => {
+                                                    console.log(colors.yellow(`${path.parse(obj.file).base}`));
+                                                    return `file '${path.parse(obj.file).base}'`
+                                                })
+
+                                                const { id, duration } = outs[0].options
+                                                    //save the concat
+                                                const concatFile = path.join(process.cwd(), PROJECT_P, `${uuid.v4()}.txt`)
+                                                fs.writeFileSync(concatFile, concat.join('\n'))
+                                                fs.chmodSync(concatFile, '777')
+                                                    //the output
+                                                const outFile = path.join(process.cwd(), PROJECT_P, `${uuid.v4()}.mp4`)
+                                                if (concat.length > 0) {
+                                                    console.log(colors.green(`Concating ${_count} to ${path.parse(outFile).base}`));
+                                                    return concatVideoClips(concatFile, outFile, [`-t ${duration}`])
+                                                        //mp4Path = outFile
+                                                        .then(mp4Path => {
+                                                            console.log(colors.green(`Concated mp4`));
+                                                            fs.unlinkSync(concatFile)
+                                                            const tsFile = path.join(process.cwd(), PROJECT_P, `${path.parse(mp4Path).name}.ts`)
+                                                                //convert to ts
+                                                            return toTs(mp4Path, tsFile)
+                                                                .then(tsFile => {
+                                                                    _count++
+                                                                    console.log(colors.green(`Concated ts ${path.parse(tsFile).base} ${_count}/${responses.length}`));
+                                                                    return tsFile
+                                                                })
                                                         })
-                                                    })
-                                            } else {
-                                                return path.parse(concat[0]).base
-                                            }
-                                        })
-                                        .catch(err=>{
-                                            console.log(colors.red(`Error on clip concat handled`));
-                                            return null
-                                        })
+                                                } else {
+                                                    return path.parse(concat[0]).base
+                                                }
+                                            })
+                                            .catch(err => {
+                                                console.log(colors.red(`Error on clip concat handled`));
+                                                return null
+                                            },{concurrency:1})
                                     })
                                     //all the videos
                                     .then(clipFiles => {
-                                        const concat =  _.compact(clipFiles).map(p => {
+                                        const concat = _.compact(clipFiles).map(p => {
                                             return `file '${path.parse(p).base}`
                                         })
                                         const concatFile = `${PROJECT_P}/${uuid.v4()}.txt`
@@ -463,9 +468,9 @@ const APP = (() => {
                                                 return muxMp4(outFile, `${PROJECT_P}/${INPUT_TRACK}.m4a`, `${OUTPUT}.mp4`)
                                             })
                                     })
-                                    .catch(err=>{
+                                    .catch(err => {
                                         console.log(colors.red("Big err"));
-                                    })
+                                    },{concurrency:1})
 
                             })
                     })
