@@ -128,7 +128,7 @@ const APP = (() => {
                                         }
                                     })
                                 })
-                        })
+                        },{concurrency:1})
                     })
             })
             .catch(err => {
@@ -446,8 +446,8 @@ const APP = (() => {
                                             .catch(err => {
                                                 console.log(colors.red(`Error on clip concat handled`));
                                                 return null
-                                            },{concurrency:1})
-                                    })
+                                            })
+                                    }, { concurrency: 1 })
                                     //all the videos
                                     .then(clipFiles => {
                                         const concat = _.compact(clipFiles).map(p => {
@@ -470,7 +470,7 @@ const APP = (() => {
                                     })
                                     .catch(err => {
                                         console.log(colors.red("Big err"));
-                                    },{concurrency:1})
+                                    })
 
                             })
                     })

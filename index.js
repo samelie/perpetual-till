@@ -75,7 +75,6 @@ function startEncoding(trackId, outFile) {
     return MAPS.chooseRoute(REDIS)
         .then(route => {
             const steps = _.flatten(route.legs.map(leg => leg.steps))
-            console.log(steps);
             const passes = []
             let incre
             let i = 0
@@ -94,6 +93,8 @@ function startEncoding(trackId, outFile) {
                 }
                 i++
             }
+
+            console.log(route);
 
             return DIRECTION_CLIPS.findCoords(_.flatten(passes), process.env.CLIPS_PER)
                 .then(videos => {
