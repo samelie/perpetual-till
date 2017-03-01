@@ -378,12 +378,18 @@ const APP = (() => {
              })*/
     }
 
+
+    /*
+
+    RETURN THE options to replace old ones
+    {id:..., itag:...}
+    */
     function _findSidx(options, backup) {
         return new Q((yes, no) => {
             function _r(q) {
                 return getSidx(q)
                     .then((d) => {
-                        yes(d)
+                        yes(q)
                     })
                     .catch(err => {
                         return _r(_.assign({}, options, { id: backup.pop() }))
@@ -414,12 +420,15 @@ const APP = (() => {
         return TRACK.start(INPUT_TRACK)
             .then(trackObj => {
                 const { desired, backup } = clipBundle
-                const ids = desired.map(id => {
+
+                let ids = desired.map(id => {
                     return { id: id, itags: ['134'] }
                 })
 
                 return _bufferSidx(ids, backup)
-                    .then(() => {
+                    .then((newIds) => {
+                        //replace
+                        ids = newIds
 
                         return parseCsv(trackObj.csv)
                             .then(results => {
