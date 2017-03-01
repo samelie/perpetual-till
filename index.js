@@ -1,4 +1,5 @@
 require('dotenv').config({ path: './envvars' });
+var polyline = require('@mapbox/polyline');
 var GoogleUpload = require('@samelie/google-cloudstorage');
 var Redis = require('@samelie/chewb-redis');
 var express = require('express');
@@ -93,8 +94,12 @@ function startEncoding(trackId, outFile) {
                 }
                 i++
             }
-
+            const encodedPoly = route.overview_polyline
             console.log(route);
+            const p = polyline.decode(route.overview_polyline.points);
+            console.log(p);
+
+            //return Q.resolve()
 
             return DIRECTION_CLIPS.findCoords(_.flatten(passes), process.env.CLIPS_PER)
                 .then(videos => {

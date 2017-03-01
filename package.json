@@ -5,6 +5,7 @@
   "private": true,
   "dependencies": {
     "@google/maps": "^0.3.1",
+    "@mapbox/polyline": "^0.2.0",
     "@samelie/chewb-redis": "git://github.com/samradical/chewb-redis.git",
     "@samelie/dash-record": "git://github.com/samradical/dash-record.git",
     "@samelie/google-cloudstorage": "git://github.com/samradical/google-cloudstorage.git",

@@ -440,7 +440,7 @@ const APP = (() => {
                                                                 })
                                                         })
                                                 } else {
-                                                    return path.parse(concat[0]).base
+                                                    return Q.resolve(path.parse(concat[0]).base)
                                                 }
                                             })
                                             .catch(err => {
