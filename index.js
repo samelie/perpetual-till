@@ -103,10 +103,11 @@ function startEncoding(trackId, outFile) {
 
             return DIRECTION_CLIPS.findCoords(_.flatten(passes), process.env.CLIPS_PER)
                 .then(videos => {
-                    console.log(videos.length);
                     const ids = videos.map(group => (group[0]))
-                    console.log(ids);
-                    return APP.addFromClipIds(trackId, outFile, BEAT_SEQUENCES, ids)
+                    return APP.addFromClipIds(trackId, outFile, BEAT_SEQUENCES, {
+                        desired:ids,
+                        backup:_.flatten(videos)
+                    })
                         .then(final => {
                             return INFO.info(trackId)
                                 .then(info => {

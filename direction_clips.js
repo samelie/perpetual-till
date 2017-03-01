@@ -63,7 +63,6 @@ const CLIPS = (() => {
   }
 
   function findCoords(coords, maxVideos) {
-    console.log(coords);
     return new Q((yes, no) => {
 
       let found = 0
