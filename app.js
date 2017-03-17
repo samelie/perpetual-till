@@ -3,6 +3,7 @@ var _ = require('lodash');
 var colors = require('colors');
 var fs = require('fs');
 var path = require('path');
+var NOISE = require('./noise');
 var TRACK = require('./track');
 var CLIPS = require('./clips');
 var lodash = require('lodash');
@@ -23,6 +24,7 @@ const APP = (() => {
     const HEIGHT = 360
 
     const MAX_SIDX = 100
+    const VIDEO_LOOK_AHEAD = 3
 
     const sidxs = [];
 
@@ -125,7 +127,8 @@ const APP = (() => {
                                         buffer: buffer,
                                         options: options,
                                         encodeOptions: {
-                                            duration: rr.durationSec, //options.duration,
+                                            //leave as yt dur if multiple buffers, we trim later if so
+                                            duration: refs.length === 1 ? options.duration : rr.durationSec,
                                             name: `${name}.mp4`,
                                         }
                                     })
@@ -379,6 +382,17 @@ const APP = (() => {
     }
 
 
+    function _groupMatchingValues(arr) {
+        var hash = {};
+        return arr.reduce(function(res, e) {
+            if (hash[e] === undefined) // if we haven't hashed the index for this value
+                hash[e] = res.push([e]) - 1; // then hash the index which is the index of the newly created array that is initialized with e
+            else // if we have hashed it
+                res[hash[e]].push(e); // then push e to the array at that hashed index
+            return res;
+        }, []);
+    }
+
     /*
 
     RETURN THE options to replace old ones
@@ -405,6 +419,10 @@ const APP = (() => {
         }, { concurrency: 1 })
     }
 
+    function _getNoise(v) {
+  return Math.max(Math.abs(NOISE.simplex2(v, v)), 0.1);
+}
+
 
     /*
     clipBundle
@@ -421,6 +439,7 @@ const APP = (() => {
             .then(trackObj => {
                 const { desired, backup } = clipBundle
 
+                //640x
                 let ids = desired.map(id => {
                     return { id: id, itags: ['134'] }
                 })
@@ -436,15 +455,44 @@ const APP = (() => {
                                 return Q.promisify(ffmpeg.ffprobe)(`${PROJECT_P}/${INPUT_TRACK}.m4a`)
                                     .then(metadata => {
 
-                                        const times = _.flatten(results)
-                                        const beats = getBeats(times, BEAT_SEQUENCES, metadata.streams[0].duration)
+                                        NOISE.seed(Math.random());
 
-                                        const vos = beats.map((o, i) => {
-                                            const vid = Object.assign({}, ids[(i % ids.length)])
-                                            vid.duration = o
+                                        const times = _.flatten(results)
+                                            //loop over the sequence and return durations for each cut
+                                        const beats = getBeats(times, BEAT_SEQUENCES, metadata.streams[0].duration)
+                                        const groupedVideoIndexs = _groupMatchingValues(beats.map((b, i) => ((i % ids.length))))
+                                        console.log(groupedVideoIndexs);
+                                        const idsOrders = []
+                                        while(idsOrders.length < beats.length){
+                                            const n = _getNoise(idsOrders.length + 1)
+                                            console.log("idsOrders.length",idsOrders.length);
+                                            console.log("noise",n);
+                                            for (var i = VIDEO_LOOK_AHEAD - 1; i >= 0; i--) {
+                                                console.log("n > i / VIDEO_LOOK_AHEAD",n , i / VIDEO_LOOK_AHEAD, i);
+                                                if(n > i / VIDEO_LOOK_AHEAD){
+                                                    for (var k = i; k > -1; k--) {
+                                                        if(groupedVideoIndexs[k]){
+                                                        console.log("groupedVideoIndexs[k].length",groupedVideoIndexs[k].length,"at ", k);
+                                                            if(groupedVideoIndexs[k].length){
+                                                                idsOrders.push(groupedVideoIndexs[k].shift())
+                                                                break;
+                                                            }else{
+                                                                groupedVideoIndexs.splice(k,1)
+                                                            }
+                                                        }
+                                                    }
+                                                    break;
+                                                }
+                                            }
+                                        }
+
+                                        const vos = idsOrders.map((o,i) => {
+                                            const vid = Object.assign({}, ids[o])
+                                            vid.duration = beats[i]
                                             return vid
                                         })
 
+                                        console.log(vos);
                                         return Q.map(vos, options => {
                                                 return record(options)
                                             }, { concurrency: 1 })
@@ -466,12 +514,12 @@ const APP = (() => {
                                                         fs.chmodSync(concatFile, '777')
                                                             //the output
                                                         const outFile = path.join(process.cwd(), PROJECT_P, `${uuid.v4()}.mp4`)
-                                                        if (concat.length > 0) {
+                                                        if (concat.length > 1) {
                                                             console.log(colors.green(`Concating ${_count} to ${path.parse(outFile).base}`));
                                                             return concatVideoClips(concatFile, outFile, [`-t ${duration}`])
                                                                 //mp4Path = outFile
                                                                 .then(mp4Path => {
-                                                                    console.log(colors.green(`Concated mp4`));
+                                                                    console.log(colors.green(`Concated mp4 ${path.parse(tsFile).base}`));
                                                                     fs.unlinkSync(concatFile)
                                                                     const tsFile = path.join(process.cwd(), PROJECT_P, `${path.parse(mp4Path).name}.ts`)
                                                                         //convert to ts
@@ -483,7 +531,7 @@ const APP = (() => {
                                                                         })
                                                                 })
                                                         } else {
-                                                            return Q.resolve(path.parse(concat[0]).base)
+                                                            return Q.resolve(outs[0].file)
                                                         }
                                                     })
                                                     .catch(err => {

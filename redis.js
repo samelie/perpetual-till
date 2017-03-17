@@ -9,6 +9,7 @@ const REDIS = (() => {
     port: process.env.REDIS_PORT || '6379',
     project: process.env.REDIS_PROJECT,
   }, isLocal)
+
 })()
 
 module.exports = REDIS

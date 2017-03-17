@@ -6,7 +6,7 @@ var _ = require('lodash');
 const CLIPS = (() => {
 
 
-  const RADIUS = ['5km', '10km', '100km']
+  const RADIUS = ['1km','5km', '10km', '100km']
   const QUERIES = ['.flv', '.wmv', '.avi', '.mov', '.mp4']
 
   function _query(location, locationRadius, q) {

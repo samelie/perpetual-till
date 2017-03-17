@@ -1,4 +1,5 @@
 require('dotenv').config({ path: './envvars' });
+const normalize = require('array-normalize')
 var polyline = require('@mapbox/polyline');
 var GoogleUpload = require('@samelie/google-cloudstorage');
 var Redis = require('@samelie/chewb-redis');
@@ -94,16 +95,22 @@ function startEncoding(trackId, outFile) {
                 }
                 i++
             }
-            const encodedPoly = route.overview_polyline
-            console.log(route);
-            const p = polyline.decode(route.overview_polyline.points);
-            console.log(p);
 
-            //return Q.resolve()
+            const decodedPoly = polyline.decode(route.overview_polyline.points)
+            const nLat = normalize(decodedPoly.map(c=>(c[0])))
+            const nLng = normalize(decodedPoly.map(c=>(c[1])))
+            const trackHash = `perpetual-till:uploads:${trackId}`
+            REDIS.hset(trackHash, `audio_track_id`, trackId)
+            REDIS.hset(trackHash, `normalized_polyline`, {lat:nLat, lng:nLng})
+
+            fs.writeFileSync('latlng.json', JSON.stringify({lat:nLat, lng:nLng}))
+
+            REDIS.sadd(`perpetual-till:uploads_ids`, trackHash)
 
             return DIRECTION_CLIPS.findCoords(_.flatten(passes), process.env.CLIPS_PER)
                 .then(videos => {
                     const ids = videos.map(group => (group[0]))
+
                     return APP.addFromClipIds(trackId, outFile, BEAT_SEQUENCES, {
                         desired:ids,
                         backup:_.flatten(videos)
@@ -115,6 +122,7 @@ function startEncoding(trackId, outFile) {
                                     console.log(info);
                                     return UPLOAD.upload(final, { title: item.snippet.title })
                                         .then(youtubeId => {
+                                            REDIS.hset(trackHash, `upload_id`, youtubeId)
                                             console.log("processing done", youtubeId);
                                             processing = false
                                             encodingFinished(youtubeId)
@@ -153,4 +161,4 @@ io = IO(server.server);
 
 start()
 
-startEncoding("-7zm8v9reDo", "t")
+//startEncoding("-7zm8v9reDo", "t")
