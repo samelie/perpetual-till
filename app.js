@@ -24,7 +24,8 @@ const APP = (() => {
     const HEIGHT = 360
 
     const MAX_SIDX = 100
-    const VIDEO_LOOK_AHEAD = 3
+
+    const VIDEO_LOOK_AHEAD_PER = 0.3;
 
     const sidxs = [];
 
@@ -454,25 +455,24 @@ const APP = (() => {
 
                                 return Q.promisify(ffmpeg.ffprobe)(`${PROJECT_P}/${INPUT_TRACK}.m4a`)
                                     .then(metadata => {
-
                                         NOISE.seed(Math.random());
 
                                         const times = _.flatten(results)
                                             //loop over the sequence and return durations for each cut
                                         const beats = getBeats(times, BEAT_SEQUENCES, metadata.streams[0].duration)
                                         const groupedVideoIndexs = _groupMatchingValues(beats.map((b, i) => ((i % ids.length))))
-                                        console.log(groupedVideoIndexs);
+                                        const lookAhead = Math.floor(VIDEO_LOOK_AHEAD * groupedVideoIndexs.length)
                                         const idsOrders = []
                                         while(idsOrders.length < beats.length){
                                             const n = _getNoise(idsOrders.length + 1)
-                                            console.log("idsOrders.length",idsOrders.length);
-                                            console.log("noise",n);
-                                            for (var i = VIDEO_LOOK_AHEAD - 1; i >= 0; i--) {
-                                                console.log("n > i / VIDEO_LOOK_AHEAD",n , i / VIDEO_LOOK_AHEAD, i);
-                                                if(n > i / VIDEO_LOOK_AHEAD){
+                                            //console.log("idsOrders.length",idsOrders.length);
+                                            //console.log("noise",n);
+                                            for (var i = lookAhead - 1; i >= 0; i--) {
+                                                //console.log("n > i / lookAhead",n , i / lookAhead, i);
+                                                if(n > i / lookAhead){
                                                     for (var k = i; k > -1; k--) {
                                                         if(groupedVideoIndexs[k]){
-                                                        console.log("groupedVideoIndexs[k].length",groupedVideoIndexs[k].length,"at ", k);
+                                                        //console.log("groupedVideoIndexs[k].length",groupedVideoIndexs[k].length,"at ", k);
                                                             if(groupedVideoIndexs[k].length){
                                                                 idsOrders.push(groupedVideoIndexs[k].shift())
                                                                 break;

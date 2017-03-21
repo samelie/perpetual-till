@@ -107,7 +107,8 @@ function startEncoding(trackId, outFile) {
 
             REDIS.sadd(`perpetual-till:uploads_ids`, trackHash)
 
-            return DIRECTION_CLIPS.findCoords(_.flatten(passes), process.env.CLIPS_PER)
+            return DIRECTION_CLIPS
+                .findCoords(_.flatten(passes), process.env.CLIPS_PER)
                 .then(videos => {
                     const ids = videos.map(group => (group[0]))
 
@@ -133,6 +134,9 @@ function startEncoding(trackId, outFile) {
 
                                 })
                         })
+                })
+                .catch(err=>{
+                    return startEncoding(trackId, outFile)
                 })
         })
 
